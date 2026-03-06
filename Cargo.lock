@@ -300,6 +300,7 @@ version = "0.1.0"
 dependencies = [
  "hmac",
  "minifb",
+ "sha-2",
  "sha2",
 ]
 
@@ -637,6 +638,10 @@ dependencies = [
  "serde_core",
  "zmij",
 ]
+
+[[package]]
+name = "sha-2"
+version = "0.1.0"
 
 [[package]]
 name = "sha2"

@@ -1,8 +1,5 @@
-use hmac::{Hmac, Mac};
-use sha2::Sha256;
+use sha_2::hmac_sha256;
 use std::time::Instant;
-
-type HmacSha256 = Hmac<Sha256>;
 
 // Collect at least this many raw bytes before first DRBG seed.
 const MIN_SEED_BYTES: usize = 256;
@@ -70,19 +67,12 @@ impl HmacDrbg {
     }
 }
 
-fn hmac_sha256(key: &[u8; 32], data: &[u8]) -> [u8; 32] {
-    let mut mac = HmacSha256::new_from_slice(key).unwrap();
-    mac.update(data);
-    mac.finalize().into_bytes().into()
-}
-
-/// HMAC(key, v || separator || data) — avoids allocating a concat buffer.
 fn hmac_sha256_concat(key: &[u8; 32], v: &[u8; 32], sep: u8, data: &[u8]) -> [u8; 32] {
-    let mut mac = HmacSha256::new_from_slice(key).unwrap();
-    mac.update(v);
-    mac.update(&[sep]);
-    mac.update(data);
-    mac.finalize().into_bytes().into()
+    let mut msg = Vec::with_capacity(32 + 1 + data.len());
+    msg.extend_from_slice(v);
+    msg.push(sep);
+    msg.extend_from_slice(data);
+    hmac_sha256(key, &msg)
 }
 
 // ---------------------------------------------------------------------------

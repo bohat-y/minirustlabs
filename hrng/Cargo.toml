@@ -7,3 +7,4 @@ edition = "2024"
 minifb = "0.28"
 sha2 = "0.10"
 hmac = "0.12"
+sha-2 = { path = "../sha-2" }
