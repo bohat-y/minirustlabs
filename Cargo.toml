@@ -1,2 +1,2 @@
 [workspace]
-members = ["autoclicker", "hrng", "sha-2"]
+members = ["autoclicker", "hrng", "sha-2", "sha3"]
