@@ -7,6 +7,7 @@
       <sourceFolder url="file://$MODULE_DIR$/sha-2/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/sha3/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/file-explorer-tui/src" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/autoclicker/.claude" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
     </content>

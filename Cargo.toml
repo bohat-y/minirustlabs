@@ -1,2 +1,2 @@
 [workspace]
-members = ["autoclicker", "hrng", "sha-2", "sha3"]
+members = ["autoclicker", "file-explorer-tui", "hrng", "sha-2", "sha3"]
