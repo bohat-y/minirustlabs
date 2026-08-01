@@ -1,0 +1,8 @@
+[package]
+name = "ca2"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+factorial = "0.1.1"
+fastrand = "2.5.0"
