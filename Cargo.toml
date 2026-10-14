@@ -1,2 +1,2 @@
 [workspace]
-members = ["autoclicker", "ca2", "ca2-rust", "ead2-lab1", "file-explorer-tui", "hrng", "sha-2", "sha3"]
+members = ["autoclicker", "ca2", "ca2-rust", "ead2-lab1", "file-explorer-tui", "hrng", "sha-2", "sha3", "subq-lab"]
