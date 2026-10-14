@@ -1,7 +1,7 @@
 [package]
 name = "subq-lab"
 version = "0.1.0"
-edition = "2026"
+edition = "2024"
 rust-version = "1.85"
 description = "Unofficial Rust client for the SubQ Decisions API"
 license = "MIT OR Apache-2.0"
