@@ -1925,6 +1925,7 @@ name = "subq-lab"
 version = "0.1.0"
 dependencies = [
  "async-openai",
+ "base64 0.23.1",
  "reqwest",
  "serde",
  "serde_json",

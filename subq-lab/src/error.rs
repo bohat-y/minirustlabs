@@ -21,6 +21,9 @@ pub enum SubqError {
 
     #[error("no {kind} answer named `{name}`")]
     MissingAnswer { name: String, kind: &'static str },
+
+    #[error("io error: {0}")]
+    Io(#[from] std::io::Error),
 }
 
 pub type Result<T> = std::result::Result<T, SubqError>;
@@ -64,7 +67,11 @@ mod tests {
     fn parses_detail_errors() {
         let body = r#"{ "detail": { "error_type": "validation_error", "message": "bad image" } }"#;
         match SubqError::from_response(StatusCode::UNPROCESSABLE_ENTITY, body) {
-            SubqError::Api { status, error_type, message } => {
+            SubqError::Api {
+                status,
+                error_type,
+                message,
+            } => {
                 assert_eq!(status, 422);
                 assert_eq!(error_type, "validation_error");
                 assert_eq!(message, "bad image");
@@ -76,7 +83,11 @@ mod tests {
     #[test]
     fn keeps_non_json_bodies() {
         match SubqError::from_response(StatusCode::BAD_GATEWAY, "<html>502</html>") {
-            SubqError::Api { error_type, message, .. } => {
+            SubqError::Api {
+                error_type,
+                message,
+                ..
+            } => {
                 assert_eq!(error_type, "unknown");
                 assert_eq!(message, "<html>502</html>");
             }

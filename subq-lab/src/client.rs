@@ -6,6 +6,8 @@ use serde_json::Value;
 
 use crate::{Decision, Question, Result, SubqError};
 
+use crate::image::{Image, MAX_IMAGE_COUNT, MAX_TOTAL_BYTES};
+
 const DEFAULT_URL: &str = "https://api.subq.ai/v1";
 const DEFAULT_DECISION_MODEL: &str = "subq-snap-preview";
 
@@ -48,6 +50,7 @@ impl Client {
                 model: DEFAULT_DECISION_MODEL.to_string(),
                 state: state.into(),
                 questions: BTreeMap::new(),
+                images: Vec::new(),
             },
         }
     }
@@ -67,6 +70,8 @@ struct DecisionBody {
     model: String,
     state: Value,
     questions: BTreeMap<String, Question>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    images: Vec<Image>,
 }
 
 /// Builder returned by [`Client::decide`]. Add questions, then `.send().await`.
@@ -84,6 +89,11 @@ impl DecisionRequest<'_> {
 
     pub fn question(mut self, name: impl Into<String>, question: impl Into<Question>) -> Self {
         self.body.questions.insert(name.into(), question.into());
+        self
+    }
+
+    pub fn image(mut self, image: impl Into<Image>) -> Self {
+        self.body.images.push(image.into());
         self
     }
 
@@ -117,6 +127,22 @@ impl DecisionRequest<'_> {
         for (name, question) in &self.body.questions {
             question.validate(name)?;
         }
+
+        let images = &self.body.images;
+        if images.len() > MAX_IMAGE_COUNT {
+            return Err(SubqError::Invalid(format!(
+                "at most {MAX_IMAGE_COUNT} images, got {}",
+                images.len()
+            )));
+        }
+
+        let total: usize = images.iter().map(Image::bytes_len).sum();
+        if total > MAX_TOTAL_BYTES {
+            return Err(SubqError::Invalid(format!(
+                "the limit is 8 MiB, got {total}"
+            )));
+        }
+
         Ok(())
     }
 }

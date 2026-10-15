@@ -1,4 +1,4 @@
-use subq_lab::{Choice, Client, Noul, Score};
+use subq_lab::{Choice, Client, Image, Noul, Score};
 
 #[tokio::main]
 async fn main() -> subq_lab::Result<()> {
@@ -30,11 +30,34 @@ async fn main() -> subq_lab::Result<()> {
         .send()
         .await?;
 
-    let queue = d.choice("queue")?;
-    let acuity = d.score("acuity")?;
-    println!("escalate: {:.3}", d.noul("escalate")?);
-    println!("queue:    {} (confidence {:.2})", queue.choice, queue.confidence);
-    println!("acuity:   {:.2} → {:?}", acuity.score, acuity.nearest_label());
-    println!("tokens:   {}", d.usage.input_tokens);
+    let c = subq
+        .decide("Cat contest")
+        .question(
+            "cuteness",
+            Score::new(
+                "How cute does the cat look?",
+                [
+                    "Ew, disgusting!",
+                    "That's not even a cat ",
+                    "Cute",
+                    "Gorgeous",
+                ],
+            ),
+        )
+        .image(Image::from_path(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/examples/not-a-cat.jpg"
+        ))?)
+        .send()
+        .await?;
+
+    let cute = c.score("cuteness")?;
+    println!(
+        "cuteness: {:.2} → {:?} (confidence {:.2})",
+        cute.score,
+        cute.nearest_label(),
+        cute.confidence
+    );
+    println!("tokens:   {}", c.usage.input_tokens);
     Ok(())
 }
