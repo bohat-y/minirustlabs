@@ -2,6 +2,7 @@ use reqwest::StatusCode;
 use serde::Deserialize;
 
 #[derive(Debug, thiserror::Error)]
+#[non_exhaustive]
 pub enum SubqError {
     #[error("SUBQ_API_KEY is not set")]
     MissingApiKey,

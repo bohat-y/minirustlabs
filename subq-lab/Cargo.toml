@@ -1,6 +1,6 @@
 [package]
 name = "subq-lab"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2024"
 rust-version = "1.85"
 description = "Unofficial Rust client for the SubQ Decisions API"
@@ -9,6 +9,7 @@ repository = "https://github.com/bohat-y/minirustlabs"
 readme = "README.md"
 keywords = ["subq", "llm", "classification", "decisions", "api"]
 categories = ["api-bindings", "web-programming::http-client"]
+exclude = ["examples/*.jpg", "examples/*.png", "examples/*.webp"]
 
 [dependencies]
 reqwest = { version = "0.13", features = ["json"] }
@@ -19,10 +20,8 @@ thiserror = "2"
 tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
 async-openai = { version = "0.42", optional = true, features = ["chat-completion", "responses", "file", "model"] }
 
-
 [features]
 openai = ["dep:async-openai"]
-
 
 [[example]]
 name = "chat"

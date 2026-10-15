@@ -41,13 +41,28 @@ async fn main() -> subq_lab::Result<()> {
 Questions can be `Noul` (yes/no), `Choice` (pick one option) or `Score` (ordered levels).
 See [`examples/decide.rs`](examples/decide.rs) for all three.
 
+## Images
+
+Attach up to 4 PNG, JPEG, or WebP images (4 MiB each, 8 MiB total). Every question sees them:
+
+```rust
+let decision = subq
+    .decide("Photo entered in a cat photo contest.")
+    .image(Image::from_path("photo.jpg")?)
+    .question("is_cat", Noul::new("Does the photo show a cat?"))
+    .send()
+    .await?;
+```
+
+See [`examples/image.rs`](examples/image.rs).
+
 ## OpenAI-compatible endpoints
 
 Enable the `openai` feature to get an [`async-openai`](https://crates.io/crates/async-openai)
 client pointed at SubQ (chat, responses, files, models):
 
 ```toml
-subq-lab = { version = "0.1", features = ["openai"] }
+subq-lab = { version = "0.2", features = ["openai"] }
 ```
 
 ```rust

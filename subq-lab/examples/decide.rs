@@ -1,4 +1,8 @@
-use subq_lab::{Choice, Client, Image, Noul, Score};
+//! Text triage with all three question types.
+//!
+//! cargo run -p subq-lab --example decide
+
+use subq_lab::{Choice, Client, Noul, Score};
 
 #[tokio::main]
 async fn main() -> subq_lab::Result<()> {
@@ -30,34 +34,18 @@ async fn main() -> subq_lab::Result<()> {
         .send()
         .await?;
 
-    let c = subq
-        .decide("Cat contest")
-        .question(
-            "cuteness",
-            Score::new(
-                "How cute does the cat look?",
-                [
-                    "Ew, disgusting!",
-                    "That's not even a cat ",
-                    "Cute",
-                    "Gorgeous",
-                ],
-            ),
-        )
-        .image(Image::from_path(concat!(
-            env!("CARGO_MANIFEST_DIR"),
-            "/examples/not-a-cat.jpg"
-        ))?)
-        .send()
-        .await?;
-
-    let cute = c.score("cuteness")?;
+    let queue = d.choice("queue")?;
+    let acuity = d.score("acuity")?;
+    println!("escalate: {:.3}", d.noul("escalate")?);
     println!(
-        "cuteness: {:.2} → {:?} (confidence {:.2})",
-        cute.score,
-        cute.nearest_label(),
-        cute.confidence
+        "queue:    {} (confidence {:.2})",
+        queue.choice, queue.confidence
     );
-    println!("tokens:   {}", c.usage.input_tokens);
+    println!(
+        "acuity:   {:.2} → {:?}",
+        acuity.score,
+        acuity.nearest_label()
+    );
+    println!("tokens:   {}", d.usage.input_tokens);
     Ok(())
 }

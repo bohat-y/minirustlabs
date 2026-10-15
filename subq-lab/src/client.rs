@@ -4,9 +4,8 @@ use std::fmt;
 use serde::Serialize;
 use serde_json::Value;
 
-use crate::{Decision, Question, Result, SubqError};
-
-use crate::image::{Image, MAX_IMAGE_COUNT, MAX_TOTAL_BYTES};
+use crate::image::{MAX_IMAGE_COUNT, MAX_TOTAL_BYTES};
+use crate::{Decision, Image, Question, Result, SubqError};
 
 const DEFAULT_URL: &str = "https://api.subq.ai/v1";
 const DEFAULT_DECISION_MODEL: &str = "subq-snap-preview";
@@ -29,7 +28,7 @@ impl fmt::Debug for Client {
 }
 
 impl Client {
-    pub fn new(api_key: String) -> Self {
+    pub fn new(api_key: impl Into<String>) -> Self {
         Self {
             http: reqwest::Client::new(),
             api_key: api_key.into(),
@@ -155,7 +154,7 @@ mod tests {
 
     #[test]
     fn builds_the_docs_request() {
-        let client = Client::new("sk-test".to_string());
+        let client = Client::new("sk-test");
         let req = client
             .decide("Patient with asthma, short of breath.")
             .question(
@@ -201,13 +200,13 @@ mod tests {
 
     #[test]
     fn rejects_zero_questions() {
-        let client = Client::new("sk-test".to_string());
+        let client = Client::new("sk-test");
         assert!(client.decide("anything").validate().is_err());
     }
 
     #[test]
     fn debug_hides_the_key() {
-        let client = Client::new("sk-secret".to_string());
+        let client = Client::new("sk-secret");
         assert!(!format!("{client:?}").contains("sk-secret"));
     }
 }

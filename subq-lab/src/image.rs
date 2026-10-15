@@ -13,38 +13,28 @@ pub(crate) const MAX_IMAGE_BYTES: usize = 4 * MIB;
 pub(crate) const MAX_TOTAL_BYTES: usize = 8 * MIB;
 pub(crate) const MAX_IMAGE_COUNT: usize = 4;
 
+/// Image formats the Decisions API accepts.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum MediaType {
     Png,
     Jpeg,
     Webp,
 }
+
 impl MediaType {
-    // detecting the format from the file's first bytes ("magic numbers")
+    /// Detects the format from the file's first bytes ("magic numbers"),
+    /// so a PNG renamed to `.jpg` is still labelled correctly.
     pub fn sniff(bytes: &[u8]) -> Option<Self> {
         match bytes {
-            [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, ..] => Some(Self::Png),
+            [0x89, b'P', b'N', b'G', 0x0D, 0x0A, 0x1A, 0x0A, ..] => Some(Self::Png),
             [0xFF, 0xD8, 0xFF, ..] => Some(Self::Jpeg),
-            [
-                b'R',
-                b'I',
-                b'F',
-                b'F',
-                _,
-                _,
-                _,
-                _,
-                b'W',
-                b'E',
-                b'B',
-                b'P',
-                ..,
-            ] => Some(Self::Webp),
+            b if b.starts_with(b"RIFF") && b.get(8..12) == Some(b"WEBP") => Some(Self::Webp),
             _ => None,
         }
     }
 
-    pub fn as_str(&self) -> &str {
+    pub fn as_str(self) -> &'static str {
         match self {
             Self::Png => "image/png",
             Self::Jpeg => "image/jpeg",
@@ -53,6 +43,8 @@ impl MediaType {
     }
 }
 
+/// An image to send with a decision. Holds the raw bytes; base64 happens
+/// only when the request is serialized.
 #[derive(Clone)]
 pub struct Image {
     media_type: MediaType,
@@ -60,18 +52,22 @@ pub struct Image {
 }
 
 impl Image {
+    /// Checks the format (PNG, JPEG, or WebP) and the 4 MiB limit.
     pub fn from_bytes(bytes: impl Into<Vec<u8>>) -> Result<Self> {
         let bytes = bytes.into();
         let media_type = MediaType::sniff(&bytes)
-            .ok_or_else(|| SubqError::Invalid("Image must be PNG, JPEG or WebP".to_string()))?;
+            .ok_or_else(|| SubqError::Invalid("image must be PNG, JPEG, or WebP".to_string()))?;
         if bytes.len() > MAX_IMAGE_BYTES {
-            return Err(SubqError::Invalid(
-                "Image must be less than 4MB".to_string(),
-            ));
+            return Err(SubqError::Invalid(format!(
+                "image is {} bytes; the limit is 4 MiB",
+                bytes.len()
+            )));
         }
         Ok(Self { media_type, bytes })
     }
 
+    /// Reads the file with blocking I/O. In async code with many files,
+    /// read them with `tokio::fs::read` and call [`Image::from_bytes`].
     pub fn from_path(path: impl AsRef<Path>) -> Result<Self> {
         Self::from_bytes(std::fs::read(path)?)
     }
@@ -85,18 +81,17 @@ impl Image {
     }
 }
 
+// Serializes as `{ "mediaType": "image/png", "base64": "iVBOR..." }`.
 impl Serialize for Image {
-    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        let mut s = serializer.serialize_struct("image", 2)?;
-        s.serialize_field("mediaType", &self.media_type.as_str())?;
+    fn serialize<S: Serializer>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error> {
+        let mut s = serializer.serialize_struct("Image", 2)?;
+        s.serialize_field("mediaType", self.media_type.as_str())?;
         s.serialize_field("base64", &STANDARD.encode(&self.bytes))?;
         s.end()
     }
 }
 
+// Don't dump megabytes of bytes into logs.
 impl fmt::Debug for Image {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Image")
@@ -105,6 +100,7 @@ impl fmt::Debug for Image {
             .finish()
     }
 }
+
 #[cfg(test)]
 mod tests {
     use super::*;
