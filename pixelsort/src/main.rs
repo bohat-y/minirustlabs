@@ -8,6 +8,17 @@ use sort::{Settings, SortKey};
 /// most this many pixels. Sorting that is fast enough to keep up.
 const PREVIEW_SIZE: u32 = 600;
 
+/// The browser has no file system, so saving and dropping files are
+/// desktop-only for now.
+const NATIVE: bool = cfg!(not(all(target_family = "wasm", target_os = "unknown")));
+
+/// Baked into the program so it works without a file system (in the browser).
+const MONA_LISA: &[u8] = include_bytes!("../assets/mona-lisa.jpeg");
+
+fn mona_lisa() -> RgbImage {
+    image::load_from_memory(MONA_LISA).unwrap().to_rgb8()
+}
+
 /// An image plus the lines cut through it. Lines only depend on angle and
 /// image size, so keep them between renders instead of rebuilding them on
 /// every slider move.
@@ -137,7 +148,7 @@ impl App {
         if ui.button("Reset").clicked() {
             self.settings = Settings::default();
         }
-        if ui.button("Save PNG").clicked() {
+        if NATIVE && ui.button("Save PNG").clicked() {
             let path = concat!(env!("CARGO_MANIFEST_DIR"), "/out.png");
             self.status = match self.sorted.save(path) {
                 Ok(()) => format!("Saved to {path}"),
@@ -145,9 +156,11 @@ impl App {
             };
         }
 
-        ui.separator();
-        ui.label("Drop an image on the window to load it.");
-        ui.label(&self.status);
+        if NATIVE {
+            ui.separator();
+            ui.label("Drop an image on the window to load it.");
+            ui.label(&self.status);
+        }
     }
 }
 
@@ -161,7 +174,7 @@ impl eframe::App for App {
         }
 
         let dropped = ctx.input(|i| i.raw.dropped_files.first().map(|f| f.path().to_path_buf()));
-        if let Some(path) = dropped {
+        if let Some(path) = dropped.filter(|_| NATIVE) {
             match image::open(&path) {
                 Ok(img) => {
                     self.set_image(&ctx, img.to_rgb8());
@@ -196,13 +209,40 @@ impl eframe::App for App {
     }
 }
 
+#[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
 fn main() -> eframe::Result {
-    let path = concat!(env!("CARGO_MANIFEST_DIR"), "/assets/mona-lisa.jpeg");
-    let img = image::open(path).unwrap().to_rgb8();
-
     eframe::run_native(
         "Pixel sort",
         eframe::NativeOptions::default(),
-        Box::new(|cc| Ok(Box::new(App::new(&cc.egui_ctx, img)))),
+        Box::new(|cc| Ok(Box::new(App::new(&cc.egui_ctx, mona_lisa())))),
     )
+}
+
+/// In the browser there's no window to open: eframe draws into the
+/// `<canvas id="the_canvas_id">` from index.html instead.
+#[cfg(all(target_family = "wasm", target_os = "unknown"))]
+fn main() {
+    use eframe::wasm_bindgen::JsCast;
+
+    let canvas = eframe::web_sys::window()
+        .unwrap()
+        .document()
+        .unwrap()
+        .get_element_by_id("the_canvas_id")
+        .unwrap()
+        .dyn_into::<eframe::web_sys::HtmlCanvasElement>()
+        .unwrap();
+
+    // Starting up in the browser is async (it waits for the GPU), and
+    // `main` can't be async, so hand the work to the browser's event loop.
+    wasm_bindgen_futures::spawn_local(async {
+        eframe::WebRunner::new()
+            .start(
+                canvas,
+                eframe::WebOptions::default(),
+                Box::new(|cc| Ok(Box::new(App::new(&cc.egui_ctx, mona_lisa())))),
+            )
+            .await
+            .expect("failed to start eframe");
+    });
 }

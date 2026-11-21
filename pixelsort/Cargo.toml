@@ -5,4 +5,8 @@ edition = "2024"
 
 [dependencies]
 eframe = "0.37.0"
-image = "0.25.10"
+image = { version = "0.25.10", default-features = false, features = ["jpeg", "png", "webp"] }
+
+[target.'cfg(all(target_family = "wasm", target_os = "unknown"))'.dependencies]
+wasm-bindgen-futures = "0.4.80"
+getrandom = { version = "0.3.4", features = ["wasm_js"] }

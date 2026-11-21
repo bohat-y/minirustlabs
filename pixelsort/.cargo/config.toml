@@ -1,0 +1,4 @@
+# Browser builds: let `getrandom` (used by egui's hashing) get random numbers
+# from the browser's crypto API. Needs the `wasm_js` feature in Cargo.toml too.
+[target.wasm32-unknown-unknown]
+rustflags = ['--cfg', 'getrandom_backend="wasm_js"']

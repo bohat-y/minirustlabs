@@ -14,6 +14,7 @@
       <sourceFolder url="file://$MODULE_DIR$/lab01/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/subq-lab/examples" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/subq-lab/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/pixelsort/src" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/autoclicker/.claude" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
     </content>
