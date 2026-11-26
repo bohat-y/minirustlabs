@@ -4174,6 +4174,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "spline-lab"
+version = "0.1.0"
+dependencies = [
+ "eframe",
+]
+
+[[package]]
 name = "stable_deref_trait"
 version = "1.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
